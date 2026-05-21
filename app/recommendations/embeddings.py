@@ -34,9 +34,10 @@ class EmbeddingEngine:
             # Build TF-IDF index
             texts = [self._song_to_text(song) for song in self.songs]
             self.vectorizer = TfidfVectorizer(
-                max_features=5000,
+                max_features=3000,
                 stop_words="english",
                 ngram_range=(1, 2),
+                dtype=np.float32,
             )
             self.tfidf_matrix = self.vectorizer.fit_transform(texts)
             logger.info("TF-IDF index built successfully")

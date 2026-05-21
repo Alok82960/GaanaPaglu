@@ -33,18 +33,23 @@ async def lifespan(app: FastAPI):
     await init_db()
     logger.info("Database initialized")
 
-    # Initialize recommendation engine
-    try:
-        await recommendation_engine.initialize()
-        logger.info("Recommendation engine initialized")
-    except Exception as e:
-        logger.warning(f"Recommendation engine initialization failed: {e}")
-        logger.warning("API will work but recommendations may use fallback mode")
+    # Initialize recommendation engine in background (don't block startup)
+    import asyncio
+    asyncio.create_task(_init_engine())
 
     yield
 
     # Shutdown
     logger.info("Shutting down GaanaPaglu")
+
+
+async def _init_engine():
+    """Initialize recommendation engine in background."""
+    try:
+        await recommendation_engine.initialize()
+        logger.info("Recommendation engine initialized")
+    except Exception as e:
+        logger.warning(f"Recommendation engine init failed: {e}")
 
 
 # Create FastAPI app
