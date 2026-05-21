@@ -1,0 +1,37 @@
+# GaanaPaglu - Production Docker Compose
+version: "3.8"
+
+services:
+  api:
+    build: .
+    container_name: gaana-paglu-api
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+      - db-data:/app/db
+    command: python run.py
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  frontend:
+    build: .
+    container_name: gaana-paglu-ui
+    ports:
+      - "8501:8501"
+    environment:
+      - API_URL=http://api:8000
+    depends_on:
+      api:
+        condition: service_healthy
+    command: streamlit run frontend/app.py --server.port 8501 --server.address 0.0.0.0 --server.headless true
+    restart: unless-stopped
+
+volumes:
+  db-data:
