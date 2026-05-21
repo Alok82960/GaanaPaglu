@@ -1,24 +1,16 @@
-"""Database connection and session management."""
+"""Database connection - using sync SQLite for maximum compatibility."""
 
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
-from sqlalchemy.orm import DeclarativeBase
-from typing import AsyncGenerator
+from sqlalchemy import create_engine
+from sqlalchemy.orm import DeclarativeBase, sessionmaker, Session
+from typing import Generator
+import os
 
-from app.config import get_settings
+DATABASE_PATH = os.environ.get("DATABASE_PATH", "./gaana_paglu.db")
+DATABASE_URL = f"sqlite:///{DATABASE_PATH}"
 
-settings = get_settings()
+engine = create_engine(DATABASE_URL, echo=False, connect_args={"check_same_thread": False})
 
-engine = create_async_engine(
-    settings.database_url,
-    echo=settings.debug,
-    future=True,
-)
-
-async_session = async_sessionmaker(
-    engine,
-    class_=AsyncSession,
-    expire_on_commit=False,
-)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
 class Base(DeclarativeBase):
@@ -26,20 +18,19 @@ class Base(DeclarativeBase):
     pass
 
 
-async def get_db() -> AsyncGenerator[AsyncSession, None]:
+def get_db() -> Generator[Session, None, None]:
     """Dependency to get database session."""
-    async with async_session() as session:
-        try:
-            yield session
-            await session.commit()
-        except Exception:
-            await session.rollback()
-            raise
-        finally:
-            await session.close()
+    db = SessionLocal()
+    try:
+        yield db
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+    finally:
+        db.close()
 
 
-async def init_db() -> None:
+def init_db() -> None:
     """Initialize database tables."""
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    Base.metadata.create_all(bind=engine)
