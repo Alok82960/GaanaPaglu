@@ -6,8 +6,9 @@ import requests
 from typing import Optional, Dict
 
 # --- Config ---
-API = "http://localhost:8000"
-st.set_page_config(page_title="GaanaPaglu | AI Music", page_icon="🎵", layout="wide", initial_sidebar_state="expanded")
+import os
+API = os.environ.get("API_URL", "https://gaanapaglu.onrender.com")
+st.set_page_config(page_title="GaanaPaglu", page_icon="🎵", layout="wide", initial_sidebar_state="expanded")
 
 # --- Session ---
 defaults = {"token": None, "username": None, "page": "home", "now_playing": None, "np_title": "", "np_artist": "", "sel_mood": None}
