@@ -1,5 +1,2 @@
-# GaanaPaglu - Minimal requirements for Streamlit Cloud frontend
-# The backend (Render) uses its own install
-
-streamlit==1.38.0
-requests==2.32.3
+streamlit
+requests
